@@ -133,6 +133,7 @@ Technology Stack
 <img width="1919" height="811" alt="673ebdf5-b1a7-4d5f-9b93-f4e0e42e9996" src="https://github.com/user-attachments/assets/537b9568-9a7f-4a43-b6e2-52309ec54a17" />
 
 - Video Link: (https://drive.google.com/file/d/1QdisLA-jqIdJ7CeSUXFiUd9aUuxTRUj0/view?usp=drive_link)
+- Website: (https://sparkle-to-scheduled.lovable.app/)
   
 - Key Features
 Automated 3-touch follow-up sequence — capped to avoid over-emailing
