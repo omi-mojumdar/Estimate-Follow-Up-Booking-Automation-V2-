@@ -1,0 +1,434 @@
+{
+  "name": "2.3 Customer Reply Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": [
+            "INBOX"
+          ],
+          "q": "-subject:\"n8n Workflow Failed\" -in:sent"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e6b3f81b-ecd4-465a-a63d-4596302c1b57",
+      "name": "Watch for Customer Replies",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iqkC2aAcW2qbjEOW",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0",
+          "mode": "list",
+          "cachedResultName": "Cleaning Leads CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 399523970,
+          "mode": "list",
+          "cachedResultName": "Estimates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit#gid=399523970"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "88ad0d1e-4475-4ad7-8a3c-d377b37fd9b4",
+      "name": "Find Customer Row in Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xKohVo6h94lS3ugI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const gmailData = $('Watch for Customer Replies').first().json;\n\nlet incomingEmail = '';\nconst rawFrom = gmailData.From || gmailData.from || '';\n\nif (typeof rawFrom === 'string') {\n  const match = rawFrom.match(/<(.+?)>/) || rawFrom.match(/([^\\s]+@[^\\s]+)/);\n  incomingEmail = match ? match[1].toLowerCase() : rawFrom.toLowerCase();\n}\n\n// ✅ Capture the customer message\nconst customerMessage = gmailData.text || gmailData.snippet || 'No message content found';\n\nconst allRows = $input.all();\nconst matchedRow = allRows.find(row => {\n  return (row.json['Email'] || '').toLowerCase().trim() === incomingEmail.trim();\n});\n\nif (!matchedRow) {\n  return [{ json: { matched: false, incomingEmail: incomingEmail }}];\n}\n\nreturn [{ json: {\n  matched: true,\n  estimateId: matchedRow.json['Estimate ID'],\n  customerName: matchedRow.json['Customer Name'],\n  email: matchedRow.json['Email'],\n  rowNumber: matchedRow.json['row_number'],\n  customerMessage: customerMessage  // ✅ Now included!\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "f2b90bc2-e5b8-4eaf-a34e-de9dd5beea10",
+      "name": "Match Reply to Estimate"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "09b85a7d-85eb-4244-8f13-d2e8921fabf7",
+              "leftValue": "={{ $json.matched }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        672,
+        0
+      ],
+      "id": "fdda28dc-a3be-4b1b-a20e-23d6a99cef7d",
+      "name": "Is Reply From Known Customer?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0",
+          "mode": "list",
+          "cachedResultName": "Cleaning Leads CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 399523970,
+          "mode": "list",
+          "cachedResultName": "Estimates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit#gid=399523970"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Customer Replied",
+            "Reply Received": "Yes",
+            "Estimate ID": "={{ $json.estimateId }}"
+          },
+          "matchingColumns": [
+            "Estimate ID"
+          ],
+          "schema": [
+            {
+              "id": "Estimate ID",
+              "displayName": "Estimate ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Service Type",
+              "displayName": "Service Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Bedrooms",
+              "displayName": "Bedrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Bathrooms",
+              "displayName": "Bathrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ZIP Code",
+              "displayName": "ZIP Code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Estimate Amount",
+              "displayName": "Estimate Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Estimate Date",
+              "displayName": "Estimate Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Follow-up Count",
+              "displayName": "Follow-up Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Last Follow-up Date",
+              "displayName": "Last Follow-up Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Next Follow-up Date",
+              "displayName": "Next Follow-up Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Opt-Out",
+              "displayName": "Opt-Out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Reply Received",
+              "displayName": "Reply Received",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        -96
+      ],
+      "id": "cb4c8406-bf97-4432-aeef-871882118e5b",
+      "name": "Mark Reply Received in Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xKohVo6h94lS3ugI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "tirthomoj@gmail.com",
+        "subject": "📩 Customer Replied — Action Needed",
+        "message": "=<p>Hi,</p>\n\n<p>A customer has replied to their follow-up email. Here are the details:</p>\n\n<table style=\"border-collapse:collapse; width:100%;\">\n  <tr>\n    <td style=\"padding:8px; border:1px solid #ddd;\"><strong>Customer Name</strong></td>\n    <td style=\"padding:8px; border:1px solid #ddd;\">{{ $('Is Reply From Known Customer?').item.json.customerName }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:8px; border:1px solid #ddd;\"><strong>Email</strong></td>\n    <td style=\"padding:8px; border:1px solid #ddd;\">{{ $('Is Reply From Known Customer?').item.json.email }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:8px; border:1px solid #ddd;\"><strong>Estimate ID</strong></td>\n    <td style=\"padding:8px; border:1px solid #ddd;\">{{ $('Is Reply From Known Customer?').item.json.estimateId }}</td>\n  </tr>\n</table>\n\n<br>\n<p><strong>💬 Customer Message:</strong></p>\n<div style=\"background:#f5f5f5; padding:15px; border-left:4px solid #00897B; border-radius:4px;\">\n {{ $('Match Reply to Estimate').item.json.customerMessage }}\n</div>\n\n<br>\n<p><strong>Choose an action:</strong></p>\n\n<table>\n  <tr>\n    <td style=\"padding:5px;\">\n      <a href=\"https://cebin99345.app.n8n.cloud/webhook/booking-update?estimateId={{ $('Is Reply From Known Customer?').item.json.estimateId }}&status=Booked\"\n         style=\"background-color:#00897B; color:white; padding:12px 24px;\n         text-decoration:none; border-radius:6px; font-weight:bold;\n         font-size:15px; display:inline-block;\">\n        ✅ Mark as Booked\n      </a>\n    </td>\n    <td style=\"padding:5px;\">\n      <a href=\"mailto:{{ $json.email }}?subject=Re: Your Cleaning Estimate&body=Hi {{ $json.customerName }},%0A%0AThank you for getting back to us!%0A%0A\"\n         style=\"background-color:#1565C0; color:white; padding:12px 24px;\n         text-decoration:none; border-radius:6px; font-weight:bold;\n         font-size:15px; display:inline-block;\">\n        📧 Reply to Customer\n      </a>\n    </td>\n    <td style=\"padding:5px;\">\n      <a href=\"https://cebin99345.app.n8n.cloud/webhook/booking-update?estimateId={{ $('Is Reply From Known Customer?').item.json.estimateId }}&status=Opted Out\"\n         style=\"background-color:#e53935; color:white; padding:12px 24px;\n         text-decoration:none; border-radius:6px; font-weight:bold;\n         font-size:15px; display:inline-block;\">\n        ❌ Mark as Opted Out\n      </a>\n    </td>\n  </tr>\n</table>\n\n<br>\n<p style=\"color:#999; font-size:13px;\">— CleanFlow Automation</p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        -96
+      ],
+      "id": "70602999-43bd-4c68-8e8d-7504a85ea4e4",
+      "name": "Notify Owner of Customer Reply",
+      "webhookId": "75dc32fd-9b5a-49c0-b73d-0a82d7e51f0e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iqkC2aAcW2qbjEOW",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Watch for Customer Replies": {
+      "main": [
+        [
+          {
+            "node": "Find Customer Row in Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Customer Row in Sheet": {
+      "main": [
+        [
+          {
+            "node": "Match Reply to Estimate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Reply to Estimate": {
+      "main": [
+        [
+          {
+            "node": "Is Reply From Known Customer?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Reply From Known Customer?": {
+      "main": [
+        [
+          {
+            "node": "Mark Reply Received in Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Reply Received in Sheet": {
+      "main": [
+        [
+          {
+            "node": "Notify Owner of Customer Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "dQpjDaimFqbocdD4",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "2e17e644-7be3-4d0e-aaf8-60c974814d33",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b4c464bd30ffc0e1cfc46638c54d90aae96f20773fc2162ec29ba9f04b7a5c2"
+  },
+  "nodeGroups": [],
+  "id": "BL5tx0uMMNwZEy5w",
+  "tags": []
+}

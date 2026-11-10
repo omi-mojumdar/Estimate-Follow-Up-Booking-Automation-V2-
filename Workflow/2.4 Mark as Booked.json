@@ -1,0 +1,306 @@
+{
+  "name": "2.4 Mark as Booked",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/booking-update",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "799a669c-1e18-4e26-a0a0-39d9cda6dceb",
+      "name": "Receive Booking Update from Website",
+      "webhookId": "13efc89a-2604-46c8-8625-543f02f57fda"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0",
+          "mode": "list",
+          "cachedResultName": "Cleaning Leads CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 399523970,
+          "mode": "list",
+          "cachedResultName": "Estimates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit#gid=399523970"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Estimate ID": "={{ $json.query.estimateId }}",
+            "Status": "={{ $json.query.status }}"
+          },
+          "matchingColumns": [
+            "Estimate ID"
+          ],
+          "schema": [
+            {
+              "id": "Estimate ID",
+              "displayName": "Estimate ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Service Type",
+              "displayName": "Service Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Bedrooms",
+              "displayName": "Bedrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Bathrooms",
+              "displayName": "Bathrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ZIP Code",
+              "displayName": "ZIP Code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Estimate Amount",
+              "displayName": "Estimate Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Estimate Date",
+              "displayName": "Estimate Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Follow-up Count",
+              "displayName": "Follow-up Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Last Follow-up Date",
+              "displayName": "Last Follow-up Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Next Follow-up Date",
+              "displayName": "Next Follow-up Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Opt-Out",
+              "displayName": "Opt-Out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Reply Received",
+              "displayName": "Reply Received",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "61acd870-3b1f-4d33-81db-b9c08fef6260",
+      "name": "Update Status in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xKohVo6h94lS3ugI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Booking Confirmed!</title>\n  <style>\n    * { margin: 0; padding: 0; box-sizing: border-box; }\n    body {\n      font-family: Arial, sans-serif;\n      background-color: #f0faf8;\n      display: flex;\n      justify-content: center;\n      align-items: center;\n      min-height: 100vh;\n    }\n    .card {\n      background: white;\n      border-radius: 12px;\n      padding: 50px 40px;\n      text-align: center;\n      max-width: 480px;\n      width: 90%;\n      box-shadow: 0 4px 20px rgba(0,0,0,0.1);\n    }\n    .checkmark {\n      font-size: 64px;\n      margin-bottom: 20px;\n    }\n    h1 {\n      color: #00897B;\n      font-size: 28px;\n      margin-bottom: 12px;\n    }\n    p {\n      color: #555;\n      font-size: 16px;\n      line-height: 1.6;\n      margin-bottom: 10px;\n    }\n    .footer {\n      margin-top: 30px;\n      color: #999;\n      font-size: 13px;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"checkmark\">✅</div>\n    <h1>Booking Confirmed!</h1>\n    <p>Thank you! Your cleaning appointment has been successfully confirmed.</p>\n    <p>Our team will reach out shortly with your appointment details.</p>\n    <div class=\"footer\">— CleanFlow Team</div>\n  </div>\n</body>\n</html>",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=UTF-8"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "c50eb45f-d880-4222-b15e-dc09a06071e6",
+      "name": "Show Booking Confirmation Page"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive Booking Update from Website": {
+      "main": [
+        [
+          {
+            "node": "Update Status in Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Status in Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Show Booking Confirmation Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "dQpjDaimFqbocdD4",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "ad011493-ae72-48b7-bcfd-5f6898d773e7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b4c464bd30ffc0e1cfc46638c54d90aae96f20773fc2162ec29ba9f04b7a5c2"
+  },
+  "nodeGroups": [],
+  "id": "CmpklhIz9aak0Hs8",
+  "tags": []
+}

@@ -1,0 +1,665 @@
+{
+  "name": "2.2 Daily Follow-up Checker",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        -96
+      ],
+      "id": "366397ac-5ed6-40ee-9c27-b6ecdbe154d4",
+      "name": "Run Every Day at 9 AM"
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\n\nfunction getTimezoneByZip(zip) {\n  const zipNum = parseInt(zip);\n  \n  // Eastern Time\n  if ((zipNum >= 10000 && zipNum <= 19999) || // NY, PA\n      (zipNum >= 20000 && zipNum <= 29999) || // DC, VA, NC, SC\n      (zipNum >= 30000 && zipNum <= 34999) || // GA, FL\n      (zipNum >= 38600 && zipNum <= 39999) || // MS, TN parts\n      (zipNum >= 40000 && zipNum <= 42999) || // KY\n      (zipNum >= 43000 && zipNum <= 45999) || // OH\n      (zipNum >= 48000 && zipNum <= 49999))   // MI\n    return 'America/New_York';\n  \n  // Central Time\n  if ((zipNum >= 35000 && zipNum <= 36999) || // AL\n      (zipNum >= 37000 && zipNum <= 38599) || // TN\n      (zipNum >= 46000 && zipNum <= 47999) || // IN parts\n      (zipNum >= 50000 && zipNum <= 52999) || // IA\n      (zipNum >= 53000 && zipNum <= 54999) || // WI\n      (zipNum >= 55000 && zipNum <= 56999) || // MN\n      (zipNum >= 57000 && zipNum <= 57999) || // SD\n      (zipNum >= 58000 && zipNum <= 58999) || // ND\n      (zipNum >= 60000 && zipNum <= 62999) || // IL\n      (zipNum >= 63000 && zipNum <= 65999) || // MO\n      (zipNum >= 66000 && zipNum <= 67999) || // KS\n      (zipNum >= 68000 && zipNum <= 69999) || // NE\n      (zipNum >= 70000 && zipNum <= 71999) || // LA\n      (zipNum >= 72000 && zipNum <= 72999) || // AR\n      (zipNum >= 73000 && zipNum <= 74999) || // OK\n      (zipNum >= 75000 && zipNum <= 79999))   // TX\n    return 'America/Chicago';\n  \n  // Mountain Time\n  if ((zipNum >= 80000 && zipNum <= 81999) || // CO\n      (zipNum >= 82000 && zipNum <= 83199) || // WY\n      (zipNum >= 83200 && zipNum <= 83999) || // ID parts\n      (zipNum >= 84000 && zipNum <= 84999) || // UT\n      (zipNum >= 85000 && zipNum <= 86999) || // AZ\n      (zipNum >= 87000 && zipNum <= 88499) || // NM\n      (zipNum >= 59000 && zipNum <= 59999))   // MT\n    return 'America/Denver';\n  \n  // Pacific Time\n  if ((zipNum >= 89000 && zipNum <= 89999) || // NV\n      (zipNum >= 90000 && zipNum <= 96199) || // CA\n      (zipNum >= 97000 && zipNum <= 97999) || // OR\n      (zipNum >= 98000 && zipNum <= 99499))   // WA\n    return 'America/Los_Angeles';\n\n  // Alaska\n  if (zipNum >= 99500 && zipNum <= 99999)\n    return 'America/Anchorage';\n\n  // Hawaii\n  if (zipNum >= 96700 && zipNum <= 96899)\n    return 'America/Honolulu';\n\n  // Default to Eastern if unknown\n  return 'America/New_York';\n}\n\nconst rows = $input.all();\n\nconst toProcess = rows.filter(row => {\n  const status = row.json['Status'];\n  const optOut = row.json['Opt-Out'];\n  const nextFollowUp = new Date(row.json['Next Follow-up Date']);\n  nextFollowUp.setHours(0, 0, 0, 0);\n  const lastSent = row.json['Last Follow-up Date'];\n  const zip = row.json['ZIP Code']?.toString().trim();\n\n  const timezone = getTimezoneByZip(zip);\n\n  const localHour = parseInt(new Intl.DateTimeFormat('en-US', {\n    timeZone: timezone,\n    hour: 'numeric',\n    hour12: false\n  }).format(now));\n\n  const today = new Date();\n  today.setHours(0, 0, 0, 0);\n  const todayStr = today.toISOString().split('T')[0];\n\n  return (\n    status === 'Pending' &&\n    optOut === 'No' &&\n    nextFollowUp <= today &&\n    lastSent !== todayStr &&\n    localHour >= 9 &&\n    localHour < 11\n  );\n});\n\nreturn toProcess;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -96
+      ],
+      "id": "f11d3e0a-291d-415e-86a5-7d08149a08ef",
+      "name": "Filter Pending & Due Estimates"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "9ec8e3cd-63c6-4de5-8a1f-8daef7369391",
+              "leftValue": "={{ $json[\"Follow-up Count\"] }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        672,
+        -96
+      ],
+      "id": "4ae5a4ca-61d3-482b-bfcb-fdaf649b06eb",
+      "name": "Is Follow-up Count Less Than 3?"
+    },
+    {
+      "parameters": {
+        "sendTo": "tirthomoj@gmail.com",
+        "subject": "Following up on your cleaning estimate",
+        "emailType": "text",
+        "message": "=<div style=\"font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;\">\n\n  <p>Hi {{ $json[\"Customer Name\"] }},</p>\n\n  <p>Just following up on the estimate we sent you. Here's a \n  full summary of your details:</p>\n\n  <table style=\"width:100%; border-collapse:collapse; margin:20px 0;\">\n    <tr style=\"background:#f5f5f5;\">\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>Estimate ID</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json[\"Estimate ID\"] }}</td>\n    </tr>\n    <tr>\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>Customer Name</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json[\"Customer Name\"] }}</td>\n    </tr>\n    <tr style=\"background:#f5f5f5;\">\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>Email</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json[\"Email\"] }}</td>\n    </tr>\n    <tr>\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>Service Type</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json[\"Service Type\"] }}</td>\n    </tr>\n    <tr style=\"background:#f5f5f5;\">\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>Bedrooms</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json[\"Bedrooms\"] }}</td>\n    </tr>\n    <tr>\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>Bathrooms</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json[\"Bathrooms\"] }}</td>\n    </tr>\n    <tr style=\"background:#f5f5f5;\">\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>ZIP Code</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json[\"ZIP Code\"] }}</td>\n    </tr>\n  </table>\n\n  <p style=\"font-size:18px; text-align:center; margin:20px 0;\">\n    Your total estimate amount is: \n    <strong style=\"color:#00897B; font-size:22px;\">\n      ${{ $json[\"Estimate Amount\"] }}\n    </strong>\n  </p>\n\n  <p>We'd love to get you booked in! Click the button below to \n  confirm your appointment.</p>\n\n  <div style=\"text-align:center; margin:30px 0;\">\n  <a href=\"{{ $json.confirmUrl }}\"\n     style=\"background-color:#00897B; color:white; padding:14px 28px;\n     text-decoration:none; border-radius:6px; font-weight:bold;\n     font-size:16px;\">\n    ✅ Confirm My Booking\n  </a>\n</div>\n\n  <p>If you have any questions, we're happy to help.</p>\n\n  <p>Best regards,<br>\n  <strong>CleanFlow</strong></p>\n\n</div>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        -192
+      ],
+      "id": "520ceb51-8fe0-4b53-95e5-d104a44b2b46",
+      "name": "Send Follow-up Email via Gmail",
+      "webhookId": "4fac07ea-35e5-4ff7-bdd6-58d038abb4a2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iqkC2aAcW2qbjEOW",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const today = new Date();\n\n// Get original data from the filter Code node\nconst originalData = $('Filter Pending & Due Estimates').item.json;\nconst count = parseInt(originalData['Follow-up Count']) + 1;\n\n// Gap: after 1st follow-up wait 3 days, after 2nd wait 5 days\nconst daysToAdd = count === 1 ? 3 : 5;\n\nconst nextDate = new Date(today);\nnextDate.setDate(today.getDate() + daysToAdd);\n\nreturn [{\n  json: {\n    rowNumber: originalData['row_number'],\n    estimateId: originalData['Estimate ID'],\n    followUpCount: count,\n    lastFollowUpDate: today.toISOString().split('T')[0],\n    nextFollowUpDate: nextDate.toISOString().split('T')[0]\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        -192
+      ],
+      "id": "3c237335-f0ce-417a-9e99-0b52d0fd8057",
+      "name": "Calculate Next Follow-up Date"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0",
+          "mode": "list",
+          "cachedResultName": "Cleaning Leads CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 399523970,
+          "mode": "list",
+          "cachedResultName": "Estimates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit#gid=399523970"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Estimate ID": "={{ $json.estimateId }}",
+            "Follow-up Count": "={{ $json.followUpCount }}",
+            "Last Follow-up Date": "={{ $json.lastFollowUpDate }}",
+            "Next Follow-up Date": "={{ $json.nextFollowUpDate }}"
+          },
+          "matchingColumns": [
+            "Estimate ID"
+          ],
+          "schema": [
+            {
+              "id": "Estimate ID",
+              "displayName": "Estimate ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service Type",
+              "displayName": "Service Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bedrooms",
+              "displayName": "Bedrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bathrooms",
+              "displayName": "Bathrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ZIP Code",
+              "displayName": "ZIP Code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estimate Amount",
+              "displayName": "Estimate Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estimate Date",
+              "displayName": "Estimate Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Follow-up Count",
+              "displayName": "Follow-up Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Follow-up Date",
+              "displayName": "Last Follow-up Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Next Follow-up Date",
+              "displayName": "Next Follow-up Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Opt-Out",
+              "displayName": "Opt-Out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1568,
+        -192
+      ],
+      "id": "cb8346e3-eb9d-4f7c-8600-eb36192c9b0e",
+      "name": "Update Follow-up Count & Dates",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xKohVo6h94lS3ugI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0",
+          "mode": "list",
+          "cachedResultName": "Cleaning Leads CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 399523970,
+          "mode": "list",
+          "cachedResultName": "Estimates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit#gid=399523970"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Estimate ID": "={{ $json['Estimate ID'] }}",
+            "Status": "Follow-up Complete"
+          },
+          "matchingColumns": [
+            "Estimate ID"
+          ],
+          "schema": [
+            {
+              "id": "Estimate ID",
+              "displayName": "Estimate ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service Type",
+              "displayName": "Service Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bedrooms",
+              "displayName": "Bedrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bathrooms",
+              "displayName": "Bathrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ZIP Code",
+              "displayName": "ZIP Code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estimate Amount",
+              "displayName": "Estimate Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estimate Date",
+              "displayName": "Estimate Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Follow-up Count",
+              "displayName": "Follow-up Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Follow-up Date",
+              "displayName": "Last Follow-up Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Next Follow-up Date",
+              "displayName": "Next Follow-up Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Opt-Out",
+              "displayName": "Opt-Out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        0
+      ],
+      "id": "15cadedd-6df0-4107-a84c-385aa6b73bc9",
+      "name": "Mark as Follow-up Complete",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xKohVo6h94lS3ugI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0",
+          "mode": "list",
+          "cachedResultName": "Cleaning Leads CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 399523970,
+          "mode": "list",
+          "cachedResultName": "Estimates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit#gid=399523970"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        -96
+      ],
+      "id": "2c4ba42b-00cf-4cee-976f-e9f443000377",
+      "name": "Get All Estimates",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xKohVo6h94lS3ugI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "615cf395-7903-4101-96c0-fd3f8d914d9d",
+              "name": "confirmUrl",
+              "value": "=https://cebin99345.app.n8n.cloud/webhook/booking-update?estimateId={{ $json[\"Estimate ID\"] }}&status=Booked",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        -192
+      ],
+      "id": "31deef39-941f-4cad-9457-b61d6c7a1621",
+      "name": "Prepare Booking Button Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Run Every Day at 9 AM": {
+      "main": [
+        [
+          {
+            "node": "Get All Estimates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Pending & Due Estimates": {
+      "main": [
+        [
+          {
+            "node": "Is Follow-up Count Less Than 3?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Follow-up Count Less Than 3?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Booking Button Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark as Follow-up Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Follow-up Email via Gmail": {
+      "main": [
+        [
+          {
+            "node": "Calculate Next Follow-up Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Next Follow-up Date": {
+      "main": [
+        [
+          {
+            "node": "Update Follow-up Count & Dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Estimates": {
+      "main": [
+        [
+          {
+            "node": "Filter Pending & Due Estimates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Booking Button Fields": {
+      "main": [
+        [
+          {
+            "node": "Send Follow-up Email via Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "dQpjDaimFqbocdD4",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "ed977786-1a24-4b26-a10f-9a7543320423",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b4c464bd30ffc0e1cfc46638c54d90aae96f20773fc2162ec29ba9f04b7a5c2"
+  },
+  "nodeGroups": [],
+  "id": "E5wd0PFeE755WJbk",
+  "tags": []
+}

@@ -1,0 +1,173 @@
+{
+  "name": "2.5 Email Failure Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f32e28dc-d132-4bc9-8de7-6361e43cc0ae",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0",
+          "mode": "list",
+          "cachedResultName": "Cleaning Leads CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1072643925,
+          "mode": "list",
+          "cachedResultName": "Errors tab",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit#gid=1072643925"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toISO() }}",
+            "Estimate ID": "={{ $json.execution.id }}",
+            "Customer Name": "={{ $json.execution.workflowId }}",
+            "Error Message": "={{ $json.execution.error.message }}",
+            "Workflow Name": "={{ $json.execution.workflowData.name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estimate ID",
+              "displayName": "Estimate ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error Message",
+              "displayName": "Error Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Workflow Name",
+              "displayName": "Workflow Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f1bbcdbb-d5ab-43ec-9783-8ee16c11da4a",
+      "name": "Log Failed Email to Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xKohVo6h94lS3ugI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "tirthomoj@gmail.com",
+        "subject": "⚠️ n8n Workflow Failed",
+        "message": "=A workflow failed in your Residential Cleaning CRM.  Workflow: {{ $json.execution.workflowData.name }} Error: {{ $json.execution.error.message }} Time: {{ $now.toISO() }}  Please check n8n for details.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "b590345f-2c57-4a11-823e-a40c4737a9ac",
+      "name": "Alert Owner of Email Failure",
+      "webhookId": "0c7ec97d-528f-4c17-ace4-7506d38f838d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iqkC2aAcW2qbjEOW",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Failed Email to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Failed Email to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Alert Owner of Email Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "cea8d985-2e8c-4db1-8b0e-d5a2606047d7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b4c464bd30ffc0e1cfc46638c54d90aae96f20773fc2162ec29ba9f04b7a5c2"
+  },
+  "nodeGroups": [],
+  "id": "dQpjDaimFqbocdD4",
+  "tags": []
+}

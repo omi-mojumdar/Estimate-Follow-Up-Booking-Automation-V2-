@@ -1,0 +1,141 @@
+{
+  "name": "2.6 Follow-up Dashboard",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "dashboard",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d76ecc4a-ba99-4d19-9cbe-1f33f6ad2bdb",
+      "name": "Receive Dashboard Request",
+      "webhookId": "7286cefd-7646-4f5d-8252-7c687d295425"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0",
+          "mode": "list",
+          "cachedResultName": "Cleaning Leads CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 399523970,
+          "mode": "list",
+          "cachedResultName": "Estimates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit#gid=399523970"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "59df64c4-087c-4d89-a1e9-a1c6815ddc63",
+      "name": "Fetch All Estimates from Sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xKohVo6h94lS3ugI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\n\n// Calculate stats\nconst total = rows.length;\nconst pending = rows.filter(r => r.json['Status'] === 'Pending').length;\nconst booked = rows.filter(r => r.json['Status'] === 'Booked').length;\nconst optedOut = rows.filter(r => r.json['Status'] === 'Opted Out').length;\nconst replied = rows.filter(r => r.json['Status'] === 'Customer Replied').length;\nconst complete = rows.filter(r => r.json['Status'] === 'Follow-up Complete').length;\n\n// Build table rows\nconst tableRows = rows.map(row => {\n  const status = row.json['Status'] || '';\n  const statusColors = {\n    'Pending': '#FFA500',\n    'Booked': '#00AA00',\n    'Opted Out': '#FF0000',\n    'Customer Replied': '#0000FF',\n    'Follow-up Complete': '#888888'\n  };\n  const color = statusColors[status] || '#000000';\n  \n  return `\n    <tr>\n      <td>${row.json['Estimate ID'] || ''}</td>\n      <td>${row.json['Customer Name'] || ''}</td>\n      <td>${row.json['Email'] || ''}</td>\n      <td>${row.json['Service Type'] || ''}</td>\n      <td>${row.json['Estimate Amount'] || ''}</td>\n      <td>${row.json['Estimate Date'] || ''}</td>\n      <td><span style=\"color:${color};font-weight:bold\">${status}</span></td>\n      <td>${row.json['Follow-up Count'] || '0'}</td>\n      <td>${row.json['Next Follow-up Date'] || ''}</td>\n    </tr>\n  `;\n}).join('');\n\n// Build full HTML page\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n  <title>Cleaning Business Dashboard</title>\n  <style>\n    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }\n    h1 { color: #333; }\n    .stats { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }\n    .card {\n      background: white;\n      padding: 20px 30px;\n      border-radius: 10px;\n      box-shadow: 0 2px 5px rgba(0,0,0,0.1);\n      text-align: center;\n      min-width: 120px;\n    }\n    .card h2 { margin: 0; font-size: 40px; }\n    .card p { margin: 5px 0 0; color: #666; font-size: 14px; }\n    .total h2 { color: #333; }\n    .pending h2 { color: #FFA500; }\n    .booked h2 { color: #00AA00; }\n    .opted h2 { color: #FF0000; }\n    .replied h2 { color: #0000FF; }\n    .complete h2 { color: #888888; }\n    table {\n      width: 100%;\n      border-collapse: collapse;\n      background: white;\n      border-radius: 10px;\n      overflow: hidden;\n      box-shadow: 0 2px 5px rgba(0,0,0,0.1);\n    }\n    th {\n      background: #4CAF50;\n      color: white;\n      padding: 12px;\n      text-align: left;\n      font-size: 13px;\n    }\n    td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 13px; }\n    tr:hover { background: #f9f9f9; }\n    tr:last-child td { border-bottom: none; }\n    .refresh {\n      float: right;\n      background: #4CAF50;\n      color: white;\n      border: none;\n      padding: 10px 20px;\n      border-radius: 5px;\n      cursor: pointer;\n      font-size: 14px;\n    }\n  </style>\n</head>\n<body>\n  <h1>🧹 Cleaning Business Dashboard</h1>\n  <button class=\"refresh\" onclick=\"location.reload()\">🔄 Refresh</button>\n\n  <div class=\"stats\">\n    <div class=\"card total\"><h2>${total}</h2><p>Total Estimates</p></div>\n    <div class=\"card pending\"><h2>${pending}</h2><p>Pending</p></div>\n    <div class=\"card booked\"><h2>${booked}</h2><p>Booked</p></div>\n    <div class=\"card opted\"><h2>${optedOut}</h2><p>Opted Out</p></div>\n    <div class=\"card replied\"><h2>${replied}</h2><p>Customer Replied</p></div>\n    <div class=\"card complete\"><h2>${complete}</h2><p>Follow-up Complete</p></div>\n  </div>\n\n  <table>\n    <thead>\n      <tr>\n        <th>Estimate ID</th>\n        <th>Customer Name</th>\n        <th>Email</th>\n        <th>Service Type</th>\n        <th>Amount</th>\n        <th>Date</th>\n        <th>Status</th>\n        <th>Follow-ups</th>\n        <th>Next Follow-up</th>\n      </tr>\n    </thead>\n    <tbody>\n      ${tableRows}\n    </tbody>\n  </table>\n</body>\n</html>\n`;\n\nreturn [{ json: { html: html }}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "1ce92333-f95c-4df4-8ebf-c9574da37341",
+      "name": "Build Dashboard Summary"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "=Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "8b5733f9-92ae-4e2f-b0d8-7225bf66932a",
+      "name": "Return Dashboard to Browser"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive Dashboard Request": {
+      "main": [
+        [
+          {
+            "node": "Fetch All Estimates from Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch All Estimates from Sheet": {
+      "main": [
+        [
+          {
+            "node": "Build Dashboard Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Dashboard Summary": {
+      "main": [
+        [
+          {
+            "node": "Return Dashboard to Browser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "21c2f4c0-7c28-45f9-af51-648f644a3d7e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b4c464bd30ffc0e1cfc46638c54d90aae96f20773fc2162ec29ba9f04b7a5c2"
+  },
+  "nodeGroups": [],
+  "id": "cOYBZEnLsBi8HFFG",
+  "tags": []
+}

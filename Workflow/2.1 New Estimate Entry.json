@@ -1,0 +1,304 @@
+{
+  "name": "2.1 New Estimate Entry",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/new-estimate",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "fe0e7443-2eb7-4d86-9c95-f65a31faef56",
+      "name": "Receive Estimate from Website",
+      "webhookId": "e1c98f2e-438b-4bd1-a62e-54736d11d716"
+    },
+    {
+      "parameters": {
+        "jsCode": "const today = new Date();\nconst followUpDate = new Date(today);\nfollowUpDate.setDate(today.getDate() + 2);\n\nconst estimateId = 'EST-' + Date.now();\n\n// Get form data\nconst customerName = $input.item.json.body.customerName;\nconst email = $input.item.json.body.email;\nconst serviceType = $input.item.json.body.serviceType;\nconst bedrooms = parseInt($input.item.json.body.bedrooms) || 0;\nconst bathrooms = parseInt($input.item.json.body.bathrooms) || 0;\nconst zipCode = $input.item.json.body.zipCode;\n\n// Auto-calculate price based on any bed/bath combination\nlet price = 100;\nprice += bedrooms * 25;\nprice += bathrooms * 20;\n\nif (serviceType === 'Move In / Move Out') price += 50;\nif (serviceType === 'Deep Clean') price += 75;\nif (serviceType === 'Post Construction') price += 100;\n\nreturn [{\n  json: {\n    estimateId: estimateId,\n    customerName: customerName,\n    email: email,\n    serviceType: serviceType,\n    bedrooms: bedrooms,\n    bathrooms: bathrooms,\n    zipCode: zipCode,\n    estimateAmount: price,\n    estimateDate: today.toISOString().split('T')[0],\n    status: 'Pending',\n    followUpCount: 0,\n    lastFollowUpDate: '',\n    nextFollowUpDate: followUpDate.toISOString().split('T')[0],\n    optOut: 'No',\n    notes: '',\n    replyReceived: 'No'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "befd1ad8-59d1-4c13-b750-83721e676037",
+      "name": "Generate Estimate ID & Dates"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0",
+          "mode": "list",
+          "cachedResultName": "Cleaning Leads CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 399523970,
+          "mode": "list",
+          "cachedResultName": "Estimates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rhKEsxXQIk59CKGdhBQr_35k_6wLXyzfSqRdWlfOUV0/edit#gid=399523970"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Estimate ID": "={{ $json.estimateId }}",
+            "Customer Name": "={{ $json.customerName }}",
+            "Email": "={{ $json.email }}",
+            "Service Type": "={{ $json.serviceType }}",
+            "Bedrooms": "={{ $json.bedrooms }}",
+            "Bathrooms": "={{ $json.bathrooms }}",
+            "ZIP Code": "={{ $json.zipCode }}",
+            "Estimate Amount": "={{ $json.estimateAmount }}",
+            "Estimate Date": "={{ $json.estimateDate }}",
+            "Status": "={{ $json.status }}",
+            "Follow-up Count": "={{ $json.followUpCount }}",
+            "Last Follow-up Date": "={{ $json.lastFollowUpDate }}",
+            "Next Follow-up Date": "={{ $json.nextFollowUpDate }}",
+            "Opt-Out": "={{ $json.optOut }}",
+            "Notes": "={{ $json.notes }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Estimate ID",
+              "displayName": "Estimate ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service Type",
+              "displayName": "Service Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bedrooms",
+              "displayName": "Bedrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bathrooms",
+              "displayName": "Bathrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ZIP Code",
+              "displayName": "ZIP Code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estimate Amount",
+              "displayName": "Estimate Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estimate Date",
+              "displayName": "Estimate Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Follow-up Count",
+              "displayName": "Follow-up Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Follow-up Date",
+              "displayName": "Last Follow-up Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Next Follow-up Date",
+              "displayName": "Next Follow-up Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Opt-Out",
+              "displayName": "Opt-Out",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        0
+      ],
+      "id": "5d109dc1-2118-4164-bda8-6c7eb31bf572",
+      "name": "Save Estimate to Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xKohVo6h94lS3ugI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "=Your Cleaning Estimate - {{ $json.estimateId }}",
+        "message": "=<div style=\"font-family:Arial,sans-serif; max-width:600px; margin:0 auto; padding:20px;\">\n\n  <p>Hi {{ $json['Customer Name'] }},</p>\n\n  <p>Thank you for reaching out! Here's a summary of your estimate:</p>\n\n  <table style=\"width:100%; border-collapse:collapse; margin:20px 0;\">\n    <tr style=\"background:#f5f5f5;\">\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>Estimate ID</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json['Estimate ID'] }}</td>\n    </tr>\n    <tr>\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>Customer Name</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json['Customer Name'] }}</td>\n    </tr>\n    <tr style=\"background:#f5f5f5;\">\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>Email</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json.Email }}</td>\n    </tr>\n    <tr>\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>Service Type</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json['Service Type'] }}</td>\n    </tr>\n    <tr style=\"background:#f5f5f5;\">\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>Bedrooms</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json.Bedrooms }}</td>\n    </tr>\n    <tr>\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>Bathrooms</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json.Bathrooms }}</td>\n    </tr>\n    <tr style=\"background:#f5f5f5;\">\n      <td style=\"padding:10px; border:1px solid #ddd;\"><strong>ZIP Code</strong></td>\n      <td style=\"padding:10px; border:1px solid #ddd;\">{{ $json['ZIP Code'] }}</td>\n    </tr>\n  </table>\n\n  <p style=\"font-size:18px; text-align:center; margin:20px 0;\">\n    Your total estimate amount is: \n    <strong style=\"color:#00897B; font-size:22px;\">${{ $json['Estimate Amount'] }}</strong>\n  </p>\n\n  <p>We'd love to get you booked in! Click the button below to \n  confirm your appointment.</p>\n\n  <div style=\"text-align:center; margin:30px 0;\">\n    <a href=\"https://cebin99345.app.n8n.cloud/webhook/booking-update?estimateId={{ $('Generate Estimate ID & Dates').item.json.estimateId }}&status=Booked\"\n   style=\"background-color:#00897B; color:white; padding:14px 28px;\n   text-decoration:none; border-radius:6px; font-weight:bold;\n   font-size:16px;\">\n  ✅ Confirm My Booking\n</a>\n  </div>\n\n  <p>If you have any questions, we're happy to help.</p>\n\n  <p>Best regards,<br>\n  <strong>CleanFlow</strong></p>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "43477332-e31d-40a3-8741-dfbcc80e0209",
+      "name": "Send Estimate Confirmation Email",
+      "webhookId": "523f041a-983f-4fb4-b2a6-bf935ddac36a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iqkC2aAcW2qbjEOW",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive Estimate from Website": {
+      "main": [
+        [
+          {
+            "node": "Generate Estimate ID & Dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Estimate ID & Dates": {
+      "main": [
+        [
+          {
+            "node": "Save Estimate to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Estimate to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Send Estimate Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "dQpjDaimFqbocdD4",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "d4279a73-4aa1-444f-9393-2c2104801d9d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b4c464bd30ffc0e1cfc46638c54d90aae96f20773fc2162ec29ba9f04b7a5c2"
+  },
+  "nodeGroups": [],
+  "id": "hYsrXBBfecGlyVJ0",
+  "tags": []
+}
